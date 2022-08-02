@@ -1,0 +1,6 @@
+---
+all:
+  hosts:
+    jump-host:
+      ansible_host: '161.156.172.215'
+      ansible_user: root

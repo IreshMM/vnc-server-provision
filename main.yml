@@ -1,6 +1,6 @@
 ---
 - name: Install VNC TigerVNC server
-  hosts: jump-host
+  hosts: all
   become: yes
   pre_tasks:
     - name: Upgrade all packages
@@ -27,6 +27,11 @@
       when: "'graphical' not in systemddefault.stdout"
       notify:
         - Reboot
+    - name: Change gnome mutter overlay key to not super key
+      shell: |
+        gsettings set org.gnome.mutter overlay-key ''
+        gsettings set org.gnome.shell.keybindings toggle-overview "['<Super>s', '<Super>Space']"
+
   tasks:
     - name: Install TigerVNC package
       dnf:
@@ -37,7 +42,7 @@
       reboot:
 
 - name: Configure VNC server
-  hosts: jump-host
+  hosts: all
   become: yes
   pre_tasks:
     - name: Create an user for VNC
@@ -72,32 +77,32 @@
         name: 'vncserver@:1'
         enabled: yes
         state: started
-    - name: Open vncserver port through firewall
-      firewalld:
-        service: vnc-server
-        permanent: yes
-        zone: public
-        state: enabled
+    # - name: Open vncserver port through firewall
+    #   firewalld:
+    #     service: vnc-server
+    #     permanent: yes
+    #     zone: public
+    #     state: enabled
 
-- name: Update network configuration to use new dns server
-  hosts: jump-host
-  become: yes
-  tasks:
-    - name: Update DNS information
-      community.general.nmcli:
-        type: ethernet
-        conn_name: eth0
-        method4: auto
-        dns4_ignore_auto: true
-        dns4: '10.1.2.5'
-        dns4_search:
-          - vmware.ibmcloud.local
-          - nsb.local
-        state: present
+# - name: Update network configuration to use new dns server
+#   hosts: jump-host
+#   become: yes
+#   tasks:
+#     - name: Update DNS information
+#       community.general.nmcli:
+#         type: ethernet
+#         conn_name: eth0
+#         method4: auto
+#         dns4_ignore_auto: true
+#         dns4: '10.1.2.5'
+#         dns4_search:
+#           - vmware.ibmcloud.local
+#           - nsb.local
+#         state: present
 
 
 - name: Install essential tools
-  hosts: jump-host
+  hosts: all
   become: yes
   pre_tasks:
     - name: Add terraform repo
@@ -107,6 +112,7 @@
   tasks:
     - name: Install essential tools
       dnf:
+        enablerepo: powertools
         name:
           - bind-utils
           - tmux
@@ -120,11 +126,15 @@
           - p7zip
           - terraform
           - ruby
+          - genisoimage
+          - jq
+          - moreutils
         state: present
       tags:
         - packages
     - name: Install mkpasswd ruby gem
+      become_user: "{{ tigervnc_user }}"
       community.general.gem:
         name: mkpasswd
         state: latest
-        user_install: false
+        user_install: true

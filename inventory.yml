@@ -1,6 +1,11 @@
 ---
 all:
   hosts:
-    jump-host:
-      ansible_host: '161.156.172.215'
+    jump-host-passive:
+      ansible_host: localhost
       ansible_user: root
+      ansible_port: 2422
+    jump-host-active:
+      ansible_host: localhost
+      ansible_user: root
+      ansible_port: 2424

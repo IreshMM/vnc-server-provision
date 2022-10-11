@@ -1,11 +1,9 @@
 ---
 all:
   hosts:
-    jump-host-passive:
-      ansible_host: localhost
-      ansible_user: root
-      ansible_port: 2422
     jump-host-active:
-      ansible_host: localhost
+      ansible_host: 10.1.2.101
       ansible_user: root
-      ansible_port: 2424
+    jump-host-passive:
+      ansible_host: 10.1.4.101
+      ansible_user: root
